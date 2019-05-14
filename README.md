@@ -1,6 +1,6 @@
 # TweetCollectorApplication
 
-Nesse exercício, usaremos a api de stream do Twitter para coletar Tweets que possuam determinadas palavras.
+Nesse exercício, usaremos a API de stream do Twitter para coletar Tweets que possuam determinadas palavras.
 
 Para deixar o exercício mais interessante, a solução vai usar um serviço REST que inicia e finaliza a coleta de Tweets.
 O serviço é iniciado com:
@@ -10,7 +10,7 @@ O serviço é finalizado com:
 > curl --request DELETE http://localhost:8090/tweets/collector
 
 A implementação do serviço REST já está implementada e você precisará apenas desenvolver as classes que gerenciam o
-ciclo de vida do serviço e a coleta dos tweets.
+ciclo de vida do serviço e o listener de coleta dos tweets.
 
 ## Passo 1:
 
@@ -78,13 +78,3 @@ Para executar o seu programa Java pela linha de comando:
 > java -cp target/twitter-exercise-1.0-SNAPSHOT-jar-with-dependencies.jar TweetCollectorApplication
 
 Não esquece de configurar as variáveis de ambiente antes de executar seu programa.
-
-## Passo 9:
-
-Para iniciar a coleta de Tweets:
-
-> curl http://localhost:8080/tweets/collector
-
-Para terminar a coleta de Tweets:
-
-> curl --request DELETE http://localhost:8080/tweets/collector
