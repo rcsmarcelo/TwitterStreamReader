@@ -19,7 +19,7 @@ public class Stream implements LifecycleManager, Serializable {
                 .setOAuthConsumerSecret(_consumerSecret)
                 .setOAuthAccessToken(_accessToken)
                 .setOAuthAccessTokenSecret(_accessTokenSecret);
-        TwitterStreamFactory tf = new TwitterStreamFactory();
+        TwitterStreamFactory tf = new TwitterStreamFactory(cb.build());
         return tf.getInstance();
     }
 
@@ -27,6 +27,7 @@ public class Stream implements LifecycleManager, Serializable {
         Ts = getTwitterStreamInstance();
         Listener = new StatusListener() {
             public void onStatus(Status status) {
+                System.out.println("help");
                 Tweet tt = new Tweet(status.getUser().getName(), status.getText(), status.getCreatedAt().toString());
                 System.out.println(tt.getUsername() + ":" + " " + tt.getTweetText());
             }
@@ -39,7 +40,7 @@ public class Stream implements LifecycleManager, Serializable {
         };
         Ts.addListener(Listener);
 
-        String terms = "";
+        String terms = "sergio";
         FilterQuery query = new FilterQuery();
         query.track(terms.split(","));
         Ts.filter(query);
@@ -47,7 +48,6 @@ public class Stream implements LifecycleManager, Serializable {
     }
 
     public void stop() {
-        Ts.removeListener(Listener);
         Ts.shutdown();
     }
 }
