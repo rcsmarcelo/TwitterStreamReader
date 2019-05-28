@@ -1,7 +1,14 @@
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.serialization.StringSerializer;
 import twitter4j.*;
 import twitter4j.conf.ConfigurationBuilder;
 
 import java.io.Serializable;
+import java.util.Properties;
 
 public class Stream implements LifecycleManager, Serializable {
     private static String _consumerKey = System.getenv().get("CONSUMER_KEY");
@@ -11,6 +18,7 @@ public class Stream implements LifecycleManager, Serializable {
 
     private TwitterStream Ts;
     private StatusListener Listener;
+    private KafkaProducer<String, String> Producer;
 
     public static TwitterStream getTwitterStreamInstance() {
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -23,13 +31,32 @@ public class Stream implements LifecycleManager, Serializable {
         return tf.getInstance();
     }
 
+    private void configProducer() {
+        Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        Producer = new KafkaProducer<String, String>(properties);
+    }
+
     public void start() {
         Ts = getTwitterStreamInstance();
+        configProducer();
         Listener = new StatusListener() {
             public void onStatus(Status status) {
-                System.out.println("help");
                 Tweet tt = new Tweet(status.getUser().getName(), status.getText(), status.getCreatedAt().toString());
-                System.out.println(tt.getUsername() + ":" + " " + tt.getTweetText());
+                System.out.println("@" + tt.getUsername() + ":" + " " + tt.getTweetText());
+                ProducerRecord<String, String> Record = new ProducerRecord<String, String>
+                        ("twitter-topic", "@" + tt.getUsername() + ":" + " " + tt.getTweetText());
+                Producer.send(Record, new Callback() {
+                    public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                        if (e == null) {
+                            System.out.println("Success");
+                        } else
+                            System.out.println("Error: " + e);
+                    }
+                });
             }
 
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {}
@@ -40,7 +67,7 @@ public class Stream implements LifecycleManager, Serializable {
         };
         Ts.addListener(Listener);
 
-        String terms = "sergio";
+        String terms = "smh";
         FilterQuery query = new FilterQuery();
         query.track(terms.split(","));
         Ts.filter(query);
@@ -49,5 +76,6 @@ public class Stream implements LifecycleManager, Serializable {
 
     public void stop() {
         Ts.shutdown();
+        Producer.close();
     }
 }
