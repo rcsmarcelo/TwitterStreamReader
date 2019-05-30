@@ -18,7 +18,7 @@ public class Stream implements LifecycleManager, Serializable {
 
     private TwitterStream Ts;
     private StatusListener Listener;
-    private KafkaProducer<String, String> Producer;
+    private KafkaProducer<String, Tweet> Producer;
 
     public static TwitterStream getTwitterStreamInstance() {
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -35,9 +35,9 @@ public class Stream implements LifecycleManager, Serializable {
         Properties properties = new Properties();
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, TweetSerializer.class.getName());
 
-        Producer = new KafkaProducer<String, String>(properties);
+        Producer = new KafkaProducer<String, Tweet>(properties);
     }
 
     public void start() {
@@ -47,8 +47,8 @@ public class Stream implements LifecycleManager, Serializable {
             public void onStatus(Status status) {
                 Tweet tt = new Tweet(status.getUser().getName(), status.getText(), status.getCreatedAt().toString());
                 System.out.println("@" + tt.getUsername() + ":" + " " + tt.getTweetText());
-                ProducerRecord<String, String> Record = new ProducerRecord<String, String>
-                        ("twitter-topic", "@" + tt.getUsername() + ":" + " " + tt.getTweetText());
+                ProducerRecord<String, Tweet> Record = new ProducerRecord<String, Tweet>
+                        ("twitter-topic", tt);
                 Producer.send(Record, new Callback() {
                     public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                         if (e == null) {
@@ -67,7 +67,7 @@ public class Stream implements LifecycleManager, Serializable {
         };
         Ts.addListener(Listener);
 
-        String terms = "smh";
+        String terms = "ffs";
         FilterQuery query = new FilterQuery();
         query.track(terms.split(","));
         Ts.filter(query);
