@@ -41,6 +41,7 @@ public class Stream implements LifecycleManager, Serializable {
     }
 
     public void start() {
+        System.out.println("hi");
         Ts = getTwitterStreamInstance();
         configProducer();
         Listener = new StatusListener() {
